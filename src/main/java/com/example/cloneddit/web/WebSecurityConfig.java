@@ -11,7 +11,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api")
+                .antMatchers("/cloneddit/api/**")
                 .permitAll()
                 .anyRequest()
                 .authenticated();
