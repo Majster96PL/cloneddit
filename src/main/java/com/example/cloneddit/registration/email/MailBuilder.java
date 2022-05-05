@@ -9,7 +9,7 @@ import org.thymeleaf.context.Context;
 @AllArgsConstructor
 public class MailBuilder {
 
-    public static final String PATH_EMAIL = "http://localhost:8080/api/verificationAccount";
+    public static final String PATH_EMAIL = "http://localhost:8080/cloneddit/api/register/account-verify?token=";
     private final TemplateEngine templateEngine;
 
     public String buildEmail(String message){
