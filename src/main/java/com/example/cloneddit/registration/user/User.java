@@ -22,23 +22,30 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long userId;
-    @NotBlank(message = "Required Username!")
-    private String firstName;
-    @NotBlank(message = "Required Password!")
-    private String password;
+    @Column(name = "firstname")
+    @NotBlank(message = "Required firstname! ")
+    private String firstname;
+    @Column(name = "lastname")
+    @NotBlank(message = "Required lastname! ")
+    private String lastname;
+    @Email
+    @NotBlank(message = "Required email! ")
     private String email;
+    private String password;
     @Enumerated(EnumType.STRING)
     private UserRole role;
     private boolean enabledUser;
     private boolean lockedUser;
 
-    public User(String firstName,
-                String password,
+    public User(String firstname,
+                String lastname,
                 String email,
+                String password,
                 UserRole role) {
-        this.firstName = firstName;
-        this.password = password;
+        this.firstname = firstname;
+        this.lastname = lastname;
         this.email = email;
+        this.password = password;
         this.role = role;
     }
 
@@ -50,10 +57,6 @@ public class User implements UserDetails {
     @Override
     public String getPassword() {
         return password;
-    }
-
-    public String getFirstName() {
-        return firstName;
     }
 
     @Override

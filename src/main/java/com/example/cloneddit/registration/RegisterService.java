@@ -33,15 +33,16 @@ public class RegisterService {
 
         String token = userService.getRecordUser(
                 new User(
-                        request.getUserName(),
-                        request.getPassword(),
+                        request.getFirstname(),
+                        request.getLastname(),
                         request.getEmail(),
+                        request.getPassword(),
                         UserRole.USER
                 )
         );
         String url = "http://localhost:8080/cloneddit/api/register/account-verify?token=" + token;
         emailSender.send(request.getEmail(),
-                buildEmailSender(request.getUserName(), url));
+                buildEmailSender(request.getFirstname(), url));
 
         return token;
     }
