@@ -1,4 +1,4 @@
-package com.example.cloneddit.registration.email;
+package com.example.cloneddit.api.registration.email;
 
 import org.springframework.stereotype.Service;
 

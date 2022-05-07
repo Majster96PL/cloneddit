@@ -1,4 +1,4 @@
-package com.example.cloneddit.registration.email;
+package com.example.cloneddit.api.registration.email;
 
 public interface EmailSender {
     void send(String receiver, String email);

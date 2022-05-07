@@ -1,7 +1,7 @@
 package com.example.cloneddit.clone.post;
 
 import com.example.cloneddit.clone.Cloneddit;
-import com.example.cloneddit.registration.user.User;
+import com.example.cloneddit.api.registration.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

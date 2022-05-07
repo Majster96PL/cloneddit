@@ -1,4 +1,4 @@
-package com.example.cloneddit.registration.email.token;
+package com.example.cloneddit.api.registration.email.token;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

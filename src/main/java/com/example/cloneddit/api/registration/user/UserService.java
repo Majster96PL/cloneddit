@@ -1,15 +1,17 @@
-package com.example.cloneddit.registration.user;
+package com.example.cloneddit.api.registration.user;
 
-import com.example.cloneddit.registration.email.token.Token;
-import com.example.cloneddit.registration.email.token.TokenService;
+import com.example.cloneddit.api.registration.email.token.Token;
+import com.example.cloneddit.api.registration.email.token.TokenService;
 import com.example.cloneddit.web.PasswordEncoder;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -22,11 +24,23 @@ public class UserService implements UserDetailsService {
     private static final String MESSAGE = " User with email %s not found ";
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email)
+        Optional<User> findUser = userRepository.findByEmail(email);
+        User user = findUser
                 .orElseThrow(()-> new UsernameNotFoundException(
                         String.format(MESSAGE, email))
                 );
+        return new org.springframework.security
+                .core.userdetails.User(
+                        user.getUsername(),
+                        user.getPassword(),
+                        user.isEnabledUser(),
+                true,
+                true,
+                true, user.getAuthorities()
+        );
+
     }
 
     public String getRecordUser(User user){

@@ -1,75 +1,43 @@
-package com.example.cloneddit.registration;
+package com.example.cloneddit.api.registration.email;
 
-import com.example.cloneddit.registration.email.EmailSender;
-import com.example.cloneddit.registration.email.EmailValidation;
-import com.example.cloneddit.registration.email.token.Token;
-import com.example.cloneddit.registration.email.token.TokenRepository;
-import com.example.cloneddit.registration.email.token.TokenService;
-import com.example.cloneddit.registration.user.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 
 @Service
 @AllArgsConstructor
 @Slf4j
-public class RegisterService {
+public class EmailSenderService implements EmailSender {
 
-    private final TokenService tokenService;
-    private final EmailValidation emailValidation;
-    private final UserService userService;
-    private final EmailSender emailSender;
+    private final static String FAILED_MESSAGE = "Failed to send email!";
+    private final JavaMailSender mailSender;
 
+    @Override
+    @Async
+    public void send(String receiver, String email) {
+        try{
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
+            messageHelper.setText(email, true);
+            messageHelper.setTo(receiver);
+            messageHelper.setSubject("Confirm Your Email!");
+            messageHelper.setFrom("cloneddit@gmail.com");
+            mailSender.send(mimeMessage);
 
-    public String register(UserRequest request) {
-        boolean isEmailValidation = emailValidation.test(request.getEmail());
-
-        if(!isEmailValidation){
-            throw new IllegalStateException("Email isn't validation!");
+        }catch(MessagingException e){
+            log.error(FAILED_MESSAGE, e);
+            throw new IllegalStateException(FAILED_MESSAGE);
         }
-
-        String token = userService.getRecordUser(
-                new User(
-                        request.getFirstname(),
-                        request.getLastname(),
-                        request.getEmail(),
-                        request.getPassword(),
-                        UserRole.USER
-                )
-        );
-        String url = "http://localhost:8080/cloneddit/api/register/account-verify?token=" + token;
-        emailSender.send(request.getEmail(),
-                buildEmailSender(request.getFirstname(), url));
-
-        return token;
     }
 
-    @Transactional
-    public String confirmToken(String token){
-        Token verificationToken = tokenService
-                .getToken(token)
-                .orElseThrow(
-                        ()-> new IllegalStateException("Token not found!")
-                );
-
-        if(verificationToken.getConfirmedDate() != null){
-            throw new IllegalStateException("Email already confirmed!");
-        }
-        LocalDateTime expiredToken = verificationToken.getExpiredDate();
-
-        if(expiredToken.isBefore(LocalDateTime.now())){
-            throw new IllegalStateException("Token expired");
-        }
-
-        tokenService.setConfirmedToken(token);
-        userService.enabledUser(verificationToken.getUser().getEmail());
-        return "Token confirmed!";
-    }
-
-    private String buildEmailSender(String name, String link){
+    public String buildEmailSender(String name, String link){
         return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n" +
                 "\n" +
                 "<span style=\"display:none;font-size:1px;color:#fff;max-height:0\"></span>\n" +
@@ -137,5 +105,4 @@ public class RegisterService {
                 "\n" +
                 "</div></div>";
     }
-
 }

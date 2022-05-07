@@ -1,12 +1,11 @@
 package com.example.cloneddit.clone;
 
 import com.example.cloneddit.clone.post.Post;
-import com.example.cloneddit.registration.user.User;
+import com.example.cloneddit.api.registration.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.lang.Nullable;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;

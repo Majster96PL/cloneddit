@@ -1,4 +1,4 @@
-package com.example.cloneddit.registration.user;
+package com.example.cloneddit.api.registration.user;
 
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;

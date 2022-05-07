@@ -1,12 +1,10 @@
-package com.example.cloneddit.registration.email.token;
+package com.example.cloneddit.api.registration.email.token;
 
-import com.example.cloneddit.registration.user.User;
-import lombok.AllArgsConstructor;
+import com.example.cloneddit.api.registration.user.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
