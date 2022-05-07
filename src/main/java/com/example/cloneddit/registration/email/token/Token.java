@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 public class Token {
@@ -20,6 +20,17 @@ public class Token {
     private String token;
     @OneToOne(fetch = FetchType.LAZY)
     private User user;
-    private Instant expiryDate;
+    private LocalDateTime expiredDate;
+    private LocalDateTime confirmedDate;
+    private LocalDateTime createdDate;
 
+    public Token(String token,
+                 User user,
+                 LocalDateTime expiredDate,
+                 LocalDateTime createdDate) {
+        this.token = token;
+        this.user = user;
+        this.expiredDate = expiredDate;
+        this.createdDate = createdDate;
+    }
 }
