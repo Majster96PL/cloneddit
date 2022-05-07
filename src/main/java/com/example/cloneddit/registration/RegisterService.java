@@ -1,77 +1,140 @@
 package com.example.cloneddit.registration;
 
-import com.example.cloneddit.clone.ClonedditException;
-import com.example.cloneddit.registration.email.EmailNotification;
-import com.example.cloneddit.registration.email.EmailSenderService;
-import com.example.cloneddit.registration.email.MailBuilder;
+import com.example.cloneddit.registration.email.EmailSender;
+import com.example.cloneddit.registration.email.EmailValidation;
 import com.example.cloneddit.registration.email.token.Token;
 import com.example.cloneddit.registration.email.token.TokenRepository;
-import com.example.cloneddit.registration.user.User;
-import com.example.cloneddit.registration.user.UserRepository;
-import com.example.cloneddit.registration.user.UserRequest;
-import com.example.cloneddit.web.PasswordEncoder;
+import com.example.cloneddit.registration.email.token.TokenService;
+import com.example.cloneddit.registration.user.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
-
-import java.util.Optional;
-import java.util.UUID;
-
-import static java.time.Instant.now;
+import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class RegisterService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final TokenRepository tokenRepository;
-    private final MailBuilder mailBuilder;
-    private final EmailSenderService emailSenderService;
+    private final TokenService tokenService;
+    private final EmailValidation emailValidation;
+    private final UserService userService;
+    private final EmailSender emailSender;
 
-    @Transactional
-    public void register(UserRequest request) {
-        User newUser = new User();
-        newUser.setUsername(request.getUserName());
-        newUser.setEmail(request.getEmail());
-        newUser.setPassword(passwordEncoder.bCryptPasswordEncoder()
-                .encode(request.getPassword()));
-        newUser.setCreatedUser(now());
-        newUser.setEnabledUser(false);
 
-        userRepository.save(newUser);
-        String url = MailBuilder.PATH_EMAIL;
-        String token = generateToken(newUser);
-        String message = mailBuilder.buildEmail(
-                "Thanks for registration to Cloneddit,please click on the link to activate your account:  "
-                + url + token );
-        emailSenderService.send(
-                new EmailNotification("Please Active your account", newUser.getEmail(),message));
-    }
+    public String register(UserRequest request) {
+        boolean isEmailValidation = emailValidation.test(request.getEmail());
 
-    private String generateToken(User user){
-        String token = UUID.randomUUID().toString();
-        Token verificationToken = new Token();
-        verificationToken.setToken(token);
-        verificationToken.setUser(user);
-        tokenRepository.save(verificationToken);
+        if(!isEmailValidation){
+            throw new IllegalStateException("Email isn't validation!");
+        }
+
+        String token = userService.getRecordUser(
+                new User(
+                        request.getUserName(),
+                        request.getPassword(),
+                        request.getEmail(),
+                        UserRole.USER
+                )
+        );
+        String url = "http://localhost:8080/cloneddit/api/register/account-verify?token=" + token;
+        emailSender.send(request.getEmail(),
+                buildEmailSender(request.getUserName(), url));
+
         return token;
     }
 
-    public void accountVerify(String token) {
-        Optional<Token> tokenOptional = tokenRepository.findByToken(token);
-        reduceUserEnabled(tokenOptional.orElseThrow(()-> new ClonedditException("Token invalid!")));
+    @Transactional
+    public String confirmToken(String token){
+        Token verificationToken = tokenService
+                .getToken(token)
+                .orElseThrow(
+                        ()-> new IllegalStateException("Token not found!")
+                );
+
+        if(verificationToken.getConfirmedDate() != null){
+            throw new IllegalStateException("Email already confirmed!");
+        }
+        LocalDateTime expiredToken = verificationToken.getExpiredDate();
+
+        if(expiredToken.isBefore(LocalDateTime.now())){
+            throw new IllegalStateException("Token expired");
+        }
+
+        tokenService.setConfirmedToken(token);
+        userService.enabledUser(verificationToken.getUser().getEmail());
+        return "Token confirmed!";
     }
 
-    public void reduceUserEnabled(Token token){
-        String username = token.getUser().getUsername();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ClonedditException("User" + username + "not found!"));
-        user.setEnabledUser(true);
-        userRepository.save(user);
+    private String buildEmailSender(String name, String link){
+        return "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n" +
+                "\n" +
+                "<span style=\"display:none;font-size:1px;color:#fff;max-height:0\"></span>\n" +
+                "\n" +
+                "  <table role=\"presentation\" width=\"100%\" style=\"border-collapse:collapse;min-width:100%;width:100%!important\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n" +
+                "    <tbody><tr>\n" +
+                "      <td width=\"100%\" height=\"53\" bgcolor=\"#0b0c0c\">\n" +
+                "        \n" +
+                "        <table role=\"presentation\" width=\"100%\" style=\"border-collapse:collapse;max-width:580px\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" align=\"center\">\n" +
+                "          <tbody><tr>\n" +
+                "            <td width=\"70\" bgcolor=\"#0b0c0c\" valign=\"middle\">\n" +
+                "                <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse\">\n" +
+                "                  <tbody><tr>\n" +
+                "                    <td style=\"padding-left:10px\">\n" +
+                "                  \n" +
+                "                    </td>\n" +
+                "                    <td style=\"font-size:28px;line-height:1.315789474;Margin-top:4px;padding-left:10px\">\n" +
+                "                      <span style=\"font-family:Helvetica,Arial,sans-serif;font-weight:700;color:#ffffff;text-decoration:none;vertical-align:top;display:inline-block\">Confirm your email</span>\n" +
+                "                    </td>\n" +
+                "                  </tr>\n" +
+                "                </tbody></table>\n" +
+                "              </a>\n" +
+                "            </td>\n" +
+                "          </tr>\n" +
+                "        </tbody></table>\n" +
+                "        \n" +
+                "      </td>\n" +
+                "    </tr>\n" +
+                "  </tbody></table>\n" +
+                "  <table role=\"presentation\" class=\"m_-6186904992287805515content\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;max-width:580px;width:100%!important\" width=\"100%\">\n" +
+                "    <tbody><tr>\n" +
+                "      <td width=\"10\" height=\"10\" valign=\"middle\"></td>\n" +
+                "      <td>\n" +
+                "        \n" +
+                "                <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse\">\n" +
+                "                  <tbody><tr>\n" +
+                "                    <td bgcolor=\"#1D70B8\" width=\"100%\" height=\"10\"></td>\n" +
+                "                  </tr>\n" +
+                "                </tbody></table>\n" +
+                "        \n" +
+                "      </td>\n" +
+                "      <td width=\"10\" valign=\"middle\" height=\"10\"></td>\n" +
+                "    </tr>\n" +
+                "  </tbody></table>\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "  <table role=\"presentation\" class=\"m_-6186904992287805515content\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;max-width:580px;width:100%!important\" width=\"100%\">\n" +
+                "    <tbody><tr>\n" +
+                "      <td height=\"30\"><br></td>\n" +
+                "    </tr>\n" +
+                "    <tr>\n" +
+                "      <td width=\"10\" valign=\"middle\"><br></td>\n" +
+                "      <td style=\"font-family:Helvetica,Arial,sans-serif;font-size:19px;line-height:1.315789474;max-width:560px\">\n" +
+                "        \n" +
+                "            <p style=\"Margin:0 0 20px 0;font-size:19px;line-height:25px;color:#0b0c0c\">Hello " + name + ",</p><p style=\"Margin:0 0 20px 0;font-size:19px;line-height:25px;color:#0b0c0c\"> Thanks for registration!. Please confirm your registration by clinking the link: </p><blockquote style=\"Margin:0 0 20px 0;border-left:10px solid #b1b4b6;padding:15px 0 0.1px 15px;font-size:19px;line-height:25px\"><p style=\"Margin:0 0 20px 0;font-size:19px;line-height:25px;color:#0b0c0c\"> <a href=\"" + link + "\">Confirm link</a> </p></blockquote>\n Link will be active by 5 minutes. <p> Welcome! </p>" +
+                "        \n" +
+                "      </td>\n" +
+                "      <td width=\"10\" valign=\"middle\"><br></td>\n" +
+                "    </tr>\n" +
+                "    <tr>\n" +
+                "      <td height=\"30\"><br></td>\n" +
+                "    </tr>\n" +
+                "  </tbody></table><div class=\"yj6qo\"></div><div class=\"adL\">\n" +
+                "\n" +
+                "</div></div>";
     }
+
 }
