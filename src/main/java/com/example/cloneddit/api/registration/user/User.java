@@ -13,8 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @EqualsAndHashCode
 public class User implements UserDetails {

@@ -29,10 +29,9 @@ public class ApiController {
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException {
+    public LoginResponse login(@RequestBody LoginRequest loginRequest)
+            throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException {
         return apiService.login(loginRequest);
     }
-
-
 }
 

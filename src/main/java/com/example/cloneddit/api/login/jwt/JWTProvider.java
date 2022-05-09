@@ -1,7 +1,6 @@
 package com.example.cloneddit.api.login.jwt;
 
 import io.jsonwebtoken.Jwts;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
@@ -12,20 +11,20 @@ import java.io.InputStream;
 import java.security.*;
 import java.security.cert.CertificateException;
 
+
 @Service
-@Slf4j
 public class JWTProvider {
 
     private KeyStore keyStore;
 
     @PostConstruct
-    public void init(){
+    public void init() throws IOException {
         try{
             keyStore = KeyStore.getInstance("JKS");
-            InputStream inputStream = getClass().getResourceAsStream("/cloneddit.jks");
+            InputStream inputStream = getClass().getResourceAsStream("/springblog.jks");
             keyStore.load(inputStream, "secret".toCharArray());
         }catch(KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e){
-            log.error("Error during loading keystore", e);
+           throw new IOException(e);
         }
     }
 
@@ -39,6 +38,6 @@ public class JWTProvider {
     }
 
     private PrivateKey getKey() throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException {
-            return (PrivateKey)  keyStore.getKey("cloneddit", "secret".toCharArray());
+            return (PrivateKey)  keyStore.getKey("springblog", "secret".toCharArray());
     }
 }
