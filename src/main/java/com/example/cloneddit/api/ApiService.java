@@ -5,10 +5,7 @@ import com.example.cloneddit.api.login.LoginResponse;
 import com.example.cloneddit.api.login.jwt.JWTProvider;
 import com.example.cloneddit.api.registration.email.EmailSender;
 import com.example.cloneddit.api.registration.email.EmailSenderService;
-import com.example.cloneddit.api.registration.user.User;
-import com.example.cloneddit.api.registration.user.UserRequest;
-import com.example.cloneddit.api.registration.user.UserRole;
-import com.example.cloneddit.api.registration.user.UserService;
+import com.example.cloneddit.api.registration.user.*;
 import com.example.cloneddit.api.registration.email.EmailValidation;
 import com.example.cloneddit.api.registration.email.token.Token;
 import com.example.cloneddit.api.registration.email.token.TokenService;
@@ -18,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +36,7 @@ public class ApiService {
     private final EmailSenderService emailSenderService;
     private final JWTProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
 
 
     public String register(UserRequest request) {
@@ -94,4 +93,11 @@ public class ApiService {
         return new LoginResponse(authenticationToken, loginRequest.getUsername());
     }
 
+    public User getEmailAsUser() {
+        User principalUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findByEmail(principalUser.getUsername())
+                .orElseThrow(
+                        () -> new UsernameNotFoundException("User from email not found!")
+                );
+    }
 }
