@@ -9,23 +9,23 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("cloneddit/api/clone")
+@RequestMapping(path = "/cloneddit/")
 @AllArgsConstructor
 public class ClonedditController {
 
     private final ClonedditService clonedditService;
 
-    @GetMapping
+    @GetMapping(path ="/all")
     public List<ClonedditDTO> getAllCloneddits(){
         return clonedditService.getAll();
     }
 
-    @PostMapping
+    @PostMapping(path ="/save")
     public ClonedditDTO createCloneddit(@RequestBody @Valid ClonedditDTO clonedditDTO){
         return clonedditService.saveCloneddit(clonedditDTO);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(path = "/clone/{id}")
     public ClonedditDTO getCloneddit(@PathVariable Long id){
         return clonedditService.getCloneddit(id);
     }
