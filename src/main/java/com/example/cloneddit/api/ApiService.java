@@ -94,7 +94,9 @@ public class ApiService {
     }
 
     public User getEmailAsUser() {
-        User principalUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        org.springframework.security.core.userdetails.User principalUser =
+                (org.springframework.security.core.userdetails.User)
+                        SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return userRepository.findByEmail(principalUser.getUsername())
                 .orElseThrow(
                         () -> new UsernameNotFoundException("User from email not found!")
