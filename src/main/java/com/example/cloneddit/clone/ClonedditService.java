@@ -2,9 +2,11 @@ package com.example.cloneddit.clone;
 
 import com.example.cloneddit.api.ApiService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.Instant;
 import java.util.List;
 
@@ -45,5 +47,13 @@ public class ClonedditService {
                 .user(apiService.getEmailAsUser())
                 .createDate(Instant.now())
                 .build();
+    }
+
+    public ClonedditDTO getCloneddit(Long id){
+        Cloneddit cloneddit = clonedditRepository.findById(id)
+                .orElseThrow(
+                        () -> new EntityNotFoundException("Cloneddit not found with id -" + id)
+                );
+        return mapDto(cloneddit);
     }
 }
