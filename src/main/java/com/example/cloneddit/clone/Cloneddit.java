@@ -20,7 +20,7 @@ import java.util.List;
 public class Cloneddit {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long cloneId;
+    private Long id;
     @NotBlank(message = "Required Name!")
     private String name;
     @NotBlank(message = "Required Description")

@@ -33,7 +33,7 @@ public class Post {
     @JoinColumn(name = "userId", referencedColumnName = "userId")
     private User user;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cloneId", referencedColumnName = "cloneId")
+    @JoinColumn(name = "cloneId", referencedColumnName = "id")
     private Cloneddit cloneddit;
     private Instant createDate;
 
