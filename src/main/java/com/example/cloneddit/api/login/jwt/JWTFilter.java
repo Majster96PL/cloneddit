@@ -47,8 +47,8 @@ public class JWTFilter extends OncePerRequestFilter {
 
     private String getJWT(HttpServletRequest request){
         String holderToken = request.getHeader("Authorization");
-        if(StringUtils.hasText(holderToken) && holderToken.startsWith("Holder")){
-            return holderToken.substring(7);
+        if(StringUtils.hasText(holderToken) && holderToken.startsWith("Bearer")){
+            return holderToken.split(" ")[1].trim();
         }
         return holderToken;
     }
