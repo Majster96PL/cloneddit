@@ -15,6 +15,7 @@ public interface PostMapper {
     @Mapping(target = "cloneddit", source = "cloneddit")
     @Mapping(target = "user", source = "user")
     @Mapping(target = "description", source = "postRequest.description")
+    @Mapping(target = "urlPost", source = "postRequest.url")
     Post map(PostRequest postRequest, Cloneddit cloneddit, User user);
 
     @Mapping(target = "id", source = "postId")
