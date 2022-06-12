@@ -16,6 +16,7 @@ public interface CommentMapper {
     @Mapping(target = "post", source = "post")
     Comment map(CommentDTO commentDTO, Post post, User user);
 
+    @Mapping(target = "id", source = "commentId")
     @Mapping(target = "postId", expression = "java(comment.getPost().getPostId())")
     @Mapping(target = "userName", expression = "java(comment.getUser().getFirstname())")
     CommentDTO mapOfCommentsToDTO(Comment comment);
