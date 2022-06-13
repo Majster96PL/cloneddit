@@ -3,6 +3,8 @@ package com.example.cloneddit.api;
 import com.example.cloneddit.api.login.LoginRequest;
 import com.example.cloneddit.api.login.LoginResponse;
 import com.example.cloneddit.api.login.jwt.JWTProvider;
+import com.example.cloneddit.api.login.jwt.JWTRefreshRequest;
+import com.example.cloneddit.api.login.jwt.JWTRefreshService;
 import com.example.cloneddit.api.registration.email.EmailSender;
 import com.example.cloneddit.api.registration.email.EmailSenderService;
 import com.example.cloneddit.api.registration.user.*;
@@ -11,6 +13,7 @@ import com.example.cloneddit.api.registration.email.token.Token;
 import com.example.cloneddit.api.registration.email.token.TokenService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Service
@@ -37,6 +41,7 @@ public class ApiService {
     private final JWTProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final JWTRefreshService jwtRefreshService;
 
 
     public String register(UserRequest request) {
@@ -90,7 +95,12 @@ public class ApiService {
                 loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authenticate);
         String authenticationToken = jwtProvider.tokenGenerated(authenticate);
-        return new LoginResponse(authenticationToken, loginRequest.getUsername());
+        return LoginResponse.builder()
+                .authenticationToken(authenticationToken)
+                .refreshToken(jwtRefreshService.generateToken().getToken())
+                .expire(Instant.now().plusMillis(jwtProvider.getJWTExpiration()))
+                .username(loginRequest.getUsername())
+                .build();
     }
 
     public User getEmailAsUser() {
@@ -101,5 +111,22 @@ public class ApiService {
                 .orElseThrow(
                         () -> new UsernameNotFoundException("User from email not found!")
                 );
+    }
+
+    public LoginResponse refreshToken(JWTRefreshRequest jwtRefreshRequest)
+            throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+        jwtRefreshService.validateToken(jwtRefreshRequest.getRefreshToken());
+        String token = jwtProvider.generatedRefreshToken(jwtRefreshRequest.getUsername());
+        return LoginResponse.builder()
+                .authenticationToken(token)
+                .refreshToken(jwtRefreshRequest.getRefreshToken())
+                .expire(Instant.now().plusMillis(jwtProvider.getJWTExpiration()))
+                .username(jwtRefreshRequest.getUsername())
+                .build();
+    }
+
+    public boolean isLoggedIn() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
     }
 }

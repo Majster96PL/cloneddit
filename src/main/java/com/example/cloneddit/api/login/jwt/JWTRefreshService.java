@@ -26,7 +26,7 @@ public class JWTRefreshService {
                 .orElseThrow(() -> new RuntimeException("Invalid Token!"));
     }
 
-    private void deleteToken(String token){
+    public void deleteToken(String token){
         jwtRefreshRepository.deleteByToken(token);
     }
 }

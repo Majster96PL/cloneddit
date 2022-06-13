@@ -26,7 +26,7 @@ public class ClonedditService {
     }
 
     @Transactional
-    public ClonedditDTO saveCloneddit(ClonedditDTO clonedditDTO){
+    public ClonedditDTO saveCloneddit(ClonedditDTO  clonedditDTO){
         Cloneddit cloneddit = clonedditRepository.save(clonedditMapper.mapDTOToClone(clonedditDTO));
         clonedditDTO.setId(cloneddit.getId());
         return clonedditDTO;
